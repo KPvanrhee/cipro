@@ -1,0 +1,79 @@
+#CIPRO DATABEWERKING SCRIPT
+#KvR NOVEMBER 2018
+#SCRIPT TO EXTRACT RAW DATA FROM REDCAP FILE TO NONMEM SUITABLE DATASET AND TO PERFORM SOME BASIC STATISTICS
+
+#CLEAR EXISTING CIPROFLOXACIN AND GRAPHICS
+rm(list=ls())
+graphics.off()
+#Load Hmisc library
+library(Hmisc)
+setwd("/Applications/Documenten/Cipro data")
+#Read ciprofloxacin
+#ciprofloxacin<-read.csv('Bestandsnaam.csv')
+ciprofloxacin<-read.csv('KR5.csv')
+#setting labels
+
+names(ciprofloxacin)[names(ciprofloxacin)=='subject_id'] <-"ID"
+names(ciprofloxacin)[names(ciprofloxacin)=='alg_gender'] <-"SEX"
+ciprofloxacin$type_drug<-NULL
+names(ciprofloxacin)[names(ciprofloxacin)=='alg_age'] <-"AGE"
+names(ciprofloxacin)[names(ciprofloxacin)=='alg_gender'] <-"SEX"
+names(ciprofloxacin)[names(ciprofloxacin)=='alg_height'] <-"HT"
+names(ciprofloxacin)[names(ciprofloxacin)=='alg_weight'] <-"WT"
+names(ciprofloxacin)[names(ciprofloxacin)=='alg_weight_history'] <-"HIST"
+names(ciprofloxacin)[names(ciprofloxacin)=='alg_weight_phase'] <-"PHASE"
+names(ciprofloxacin)[names(ciprofloxacin)=='incl_surg_type'] <-"SURG"
+names(ciprofloxacin)[names(ciprofloxacin)=='adm_dosage_iv_d'] <-"AMT_IV"
+names(ciprofloxacin)[names(ciprofloxacin)=='adm_dosage_po_d'] <-"AMT_PO"
+names(ciprofloxacin)[names(ciprofloxacin)=='serumcreat_before_value_d'] <-"CREAT"
+
+ciprofloxacin$urine_end_d<-as.POSIXct(ciprofloxacin$urine_end_d, format = "%Y-%m-%d %H:%M")
+ciprofloxacin$urine_start_d<-as.POSIXct(ciprofloxacin$urine_start_d, format = "%Y-%m-%d %H:%M")
+
+ciprofloxacin$SURG2<-
+  
+  ifelse(ciprofloxacin$SURG==99,
+         NA,ciprofloxacin$SURG)
+ciprofloxacin$SURG<-ciprofloxacin$SURG2
+ciprofloxacin$SURG2<-NULL
+
+#tijd naar minuten als numeriek met 2 decimalen
+
+library(lubridate)
+ciprofloxacin$bs_po1_time_d <-as.numeric(as.period(ms(ciprofloxacin$bs_po1_time_d), unit = "sec")/60)
+ciprofloxacin$bs_po2_time_d <-as.numeric(as.period(ms(ciprofloxacin$bs_po2_time_d), unit = "sec")/60)
+class(ciprofloxacin$bs_po1_time_d)
+#Invoegen t=0
+ciprofloxacin$bs_0_id <- NA
+ciprofloxacin$bs_0_time <- 0.00
+ciprofloxacin$bs_0_conc <- 0.00
+
+#rate berekenen
+ciprofloxacin$ADMTIME <- as.numeric(difftime(ciprofloxacin$adm_start_iv_d, ciprofloxacin$adm_end_iv_d, units=c("mins")))
+ciprofloxacin$RATE<-round(ciprofloxacin$AMT_IV/ciprofloxacin$ADMTIME, digits=2)
+
+#herordenen naar kolommen
+ciprofloxacin <- ciprofloxacin[c("ID", "AMT_PO", "adm_time_po_d", "AMT_IV", "RATE", "ADMTIME", "AGE", "SEX", "RACE", "HT", "WT", "HIST", "PHASE", "SURG", 
+                                 "bs_po1_id_d", "bs_po1_time_d", "bs_po1_conc_d", 
+                                 "bs_po2_id_d", "bs_po2_time_d", "bs_po2_conc_d",
+                                 "bs_po3_id_d", "bs_po3_time_d", "bs_po3_conc_d",
+                                 "bs_po4_id_d", "bs_po4_time_d", "bs_po4_conc_d",
+                                 "bs_po5_id_d", "bs_po5_time_d", "bs_po5_conc_d",
+                                 "bs_po6_id_d", "bs_po6_time_d", "bs_po6_conc_d",
+                                 "bs_po7_id_d", "bs_po7_time_d", "bs_po7_conc_d",
+                                 "bs_po8_id_d", "bs_po8_time_d", "bs_po8_conc_d",
+                                 "bs_iv1_id_d", "bs_iv1_time_d", "bs_iv1_conc_d",
+                                 "bs_iv2_id_d", "bs_iv2_time_d", "bs_iv2_conc_d",
+                                 "bs_iv3_id_d", "bs_iv3_time_d", "bs_iv3_conc_d",
+                                 "bs_iv4_id_d", "bs_iv4_time_d", "bs_iv4_conc_d", 
+                                 "bs_iv5_id_d", "bs_iv5_time_d", "bs_iv5_conc_d", 
+                                 "bs_iv6_id_d", "bs_iv6_time_d", "bs_iv6_conc_d", 
+                                 "bs_iv7_id_d", "bs_iv7_time_d", "bs_iv7_conc_d", 
+                                 "bs_iv8_id_d", "bs_iv8_time_d", "bs_iv8_conc_d", 
+                                 "bs_iv9_id_d", "bs_iv9_time_d", "bs_iv9_conc_d", 
+                                 "CREAT", "urincreat_value_d", "urine_start_d", "urine_end_d", "urinecreat_value_d", 
+                                 "adm_time_po_d", "adm_start_iv_d", "adm_end_iv_d", "urine_gfr_d"
+)]
+#ANESTHESIE EN OK TIJDEN NOG TOEVOEGEN, IS GEEN ONDERDEEL HUIDIGE DATASET
+
+                                 
